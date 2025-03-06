@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "626774704920",
+    "project_id": "nutriflow-project",
+    "storage_bucket": "nutriflow-project.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:626774704920:android:75ae17ff9977e0d53d546d",
+        "android_client_info": {
+          "package_name": "com.example.nutriflow_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "626774704920-vc7bfdgdl23hamiukklm38eds52iqqs6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.nutriflow_app",
+            "certificate_hash": "000368c89704808d11be2438a3fdc620553f88f6"
+          }
+        },
+        {
+          "client_id": "626774704920-bgk0897iit3rnebmq8cp0sf3e9r9s8ic.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB30mcNbwuQzwg4yfvPMNBn7JEpUqdPoLE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "626774704920-bgk0897iit3rnebmq8cp0sf3e9r9s8ic.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "626774704920-kv61kmkfdrhadjjilt94maqbbriae8n3.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.nutriflowApp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
