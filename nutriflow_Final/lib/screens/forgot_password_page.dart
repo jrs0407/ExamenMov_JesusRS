@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart'; // Añadido para usar Google Fonts
-import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase
+import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:nutriflow_app/screens/log_screen.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({Key? key}) : super(key: key);
@@ -11,16 +13,13 @@ class ForgotPasswordPage extends StatefulWidget {
 
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final TextEditingController _emailController = TextEditingController();
+  String? _errorMessage;
 
-  // Mensaje de error en rojo si el email no contiene '@'
-  String? _errorMessage; // Mensaje de error en rojo u otros errores
+  static const Color primaryGreen = Color(0xFF2E7D32);
+  static const Color buttonGreen = Color(0xFF43A047);
 
   @override
   Widget build(BuildContext context) {
-    // Colores base (verdes) para la UI
-    const Color primaryGreen = Color(0xFF2E7D32);
-    const Color buttonGreen = Color(0xFF43A047);
-
     return Scaffold(
       appBar: AppBar(
         backgroundColor: primaryGreen,
@@ -39,10 +38,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         ),
       ),
       body: SizedBox(
-        // Abarca todo el alto y ancho de la pantalla
         width: double.infinity,
         height: double.infinity,
-        // Fondo con gradiente que llena la pantalla
         child: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
@@ -55,11 +52,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
-                // Encabezado vistoso en la parte superior
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.lock_reset, size: 32, color: primaryGreen),
+                    const Icon(Icons.lock_reset, size: 32, color: primaryGreen),
                     const SizedBox(width: 10),
                     Text(
                       'Recuperar Contraseña',
@@ -82,8 +78,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   ),
                 ),
                 const SizedBox(height: 24),
-
-                // Si hay error, lo mostramos en rojo encima del TextField
                 if (_errorMessage != null) ...[
                   Text(
                     _errorMessage!,
@@ -91,8 +85,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   ),
                   const SizedBox(height: 4),
                 ],
-
-                // Campo de texto para el email
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -108,7 +100,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   child: TextField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
-                    style: const TextStyle(fontSize: 16),
                     decoration: InputDecoration(
                       labelText: 'Ingresa el email',
                       labelStyle: TextStyle(color: Colors.grey.shade700),
@@ -121,8 +112,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   ),
                 ),
                 const SizedBox(height: 20),
-
-                // Botón Enviar
                 SizedBox(
                   width: double.infinity,
                   height: 48,
@@ -132,64 +121,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      elevation: 5,
                     ),
-                    onPressed: () async {
-                      final String email = _emailController.text.trim();
-                      // Verificamos si contiene '@'
-                      if (!email.contains('@')) {
-                        setState(() {
-                          _errorMessage = 'El correo debe contener "@".';
-                        });
-                        return;
-                      }
-
-                      // Si pasa la validación del formato de email, llamamos a sendPasswordResetEmail
-                      setState(() => _errorMessage = null);
-
-                      try {
-                        // Intenta enviar el correo de restablecimiento
-                        await FirebaseAuth.instance
-                            .sendPasswordResetEmail(email: email);
-
-                        // Si se envía correctamente, mostramos un AlertDialog
-                        showDialog(
-                          context: context,
-                          builder: (ctx) => AlertDialog(
-                            title: const Text('Correo enviado'),
-                            content: Text(
-                              'Se ha enviado un enlace de recuperación a $email.\n'
-                              'Revisa tu bandeja de entrada.\n'
-                              'Si no recibes nada, lo más probable es que tu cuenta no exista.',
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(ctx),
-                                child: const Text('OK'),
-                              ),
-                            ],
-                          ),
-                        );
-                      } on FirebaseAuthException catch (e) {
-                        // Errores de Firebase
-                        if (e.code == 'user-not-found') {
-                          setState(() {
-                            _errorMessage =
-                                'No existe ninguna cuenta con ese correo.';
-                          });
-                        } else {
-                          setState(() {
-                            _errorMessage =
-                                'Error de Firebase: ${e.message ?? e.code}';
-                          });
-                        }
-                      } catch (e) {
-                        // Errores genéricos
-                        setState(() {
-                          _errorMessage = 'Ocurrió un error inesperado: $e';
-                        });
-                      }
-                    },
+                    onPressed: _validarYRegistrarRecuperacion,
                     child: Text(
                       'Enviar',
                       style: GoogleFonts.roboto(
@@ -200,11 +133,117 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                     ),
                   ),
                 ),
+                //Boton navegación al historial
+                TextButton.icon(
+                  icon: const Icon(Icons.history,
+                      color: Color(0xFF2E7D32)), 
+                  label: Text(
+                    'Ver historial de solicitudes',
+                    style: GoogleFonts.roboto(
+                      fontSize: 16,
+                      color: Color(0xFF2E7D32), 
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const LogScreen()),
+                    );
+                  },
+                ),
               ],
             ),
           ),
         ),
       ),
     );
+  }
+
+  // Funcion principal que valida el límite y registra
+  Future<void> _validarYRegistrarRecuperacion() async {
+    final email = _emailController.text.trim();
+
+    if (!email.contains('@')) {
+      setState(() => _errorMessage = 'El correo debe contener "@".');
+      return;
+    }
+
+    try {
+      final peticionesHoy = await _contarPeticionesHoy(email);
+      if (peticionesHoy >= 5) {
+        setState(() {
+          _errorMessage =
+              'Has superado el límite de 5 peticiones en las últimas 24 horas.';
+        });
+        return;
+      }
+
+      await _registrarLogRecuperacion(email);
+
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Éxito'),
+          content: Text('Se ha enviado el correo de recuperación a $email'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      setState(() => _errorMessage = 'Error: $e');
+    }
+  }
+
+  // Registra el log y limpia logs viejos
+  Future<void> _registrarLogRecuperacion(String email) async {
+    final logsRef =
+        FirebaseFirestore.instance.collection('logs_password_reset');
+
+    await logsRef.add({
+      'email': email,
+      'timestamp': FieldValue.serverTimestamp(),
+    });
+
+    await _limpiarLogsAntiguos(email);
+  }
+
+  // Elimina logs con más de 24 horas de antigüedad
+  Future<void> _limpiarLogsAntiguos(String email) async {
+    final logsRef =
+        FirebaseFirestore.instance.collection('logs_password_reset');
+
+    final fechaLimite = DateTime.now().subtract(const Duration(days: 1));
+
+    final querySnapshot = await logsRef
+        .where('email', isEqualTo: email)
+        .where('timestamp', isLessThan: Timestamp.fromDate(fechaLimite))
+        .get();
+
+    for (var doc in querySnapshot.docs) {
+      await doc.reference.delete();
+    }
+  }
+
+  // Cuenta cuantas peticiones ha hecho este email en las últimas 24 horas
+  Future<int> _contarPeticionesHoy(String email) async {
+    final logsRef =
+        FirebaseFirestore.instance.collection('logs_password_reset');
+
+    final fechaLimite = DateTime.now().subtract(const Duration(days: 1));
+
+    final querySnapshot = await logsRef
+        .where('email', isEqualTo: email)
+        .where('timestamp', isGreaterThan: Timestamp.fromDate(fechaLimite))
+        .get();
+
+    return querySnapshot.docs.length;
   }
 }
